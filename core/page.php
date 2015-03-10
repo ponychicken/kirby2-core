@@ -16,6 +16,10 @@
  * @copyright Bastian Allgeier
  * @license   http://getkirby.com/license
  */
+/**
+ * Support for multiple template engines based on:
+ * https://github.com/lehni/kirbycms by Juerg Lehni <juerg@scratchdisk.com>
+ */
 abstract class PageAbstract {
 
   static public $models = array();
