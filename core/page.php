@@ -19,6 +19,7 @@
 /**
  * Support for multiple template engines based on:
  * https://github.com/lehni/kirbycms by Juerg Lehni <juerg@scratchdisk.com>
+ * Ported to Kirby 2 by Leo Koppelkamm <hello@leo-koppelkamm.de>
  */
 abstract class PageAbstract {
 
@@ -925,7 +926,7 @@ abstract class PageAbstract {
    *
    * @return string
    */
-  public function template() {
+  public function template($withExtension = false) {
 
     // check for a cached template name
     if(isset($this->cache['template'])) {
@@ -962,6 +963,7 @@ abstract class PageAbstract {
 
   }
 
+ /*
   * Returns the name of the used template
   * by using one of the custom templating engines registered at tpl.engines.
   *
