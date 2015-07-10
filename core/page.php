@@ -956,78 +956,39 @@ abstract class PageAbstract {
    * @return string
    */
   public function template($withExtension = false) {
-
     // check for a cached template name
-    if(isset($this->cache['template'])) {
-      if ($withExtension) {
-        return join('.', $this->cache['template']);
-      } else {
-        return $this->cache['template'][0];
-      }
+    $template = isset($this->cache['template']) ? $this->cache['template'] : null;
+    if(!$template) {
+      // get the template name
+      $templateName = $this->intendedTemplate();
+      // template root folder
+      $templates = $this->kirby->roots()->templates();
+      // hook for external templating engines
+      $engines = c::get('tpl.engines');
+
+      $getTemplate = function($name) use($templates, $engines) {
+        if ($engines) {
+          foreach($engines as $extension => $engine) {
+            if (file_exists($templates . DS . $name . '.' . $extension)) {
+              return array($name, $extension);
+            }
+          }
+        }
+        // no need to check for existance of default.php since it's the last
+        // fallback also.
+        if ($name == 'default' || file_exists($templates . DS . $name . '.php'))
+          return array($name, 'php');
+        return null;
+      };
+
+      $template = $getTemplate($templateName);
+      // if the given template wasn't found, fall back to 'default'
+      if (!$template)
+        $template = $getTemplate('default');
+      $this->cache['template'] = $template;
     }
-
-    // get the template name
-    $templateName = $this->intendedTemplate();
-
-    // template root folder
-    $templates = $this->kirby->roots()->templates();
-    // hook for external templating engines
-    $engines = c::get('tpl.engines');
-
-    $ret = array('', 'php');
-
-    if ($engines) {
-      $this->cache['template'] = $this->templateWithExternal($templateName);
-    } else {
-      $this->cache['template'][0] =
-      file_exists($templates . DS . $templateName . '.php') ?
-      $templateName : 'default';
-    }
-
-    if ($withExtension) {
-      return join('.', $this->cache['template']);
-    } else {
-      return $this->cache['template'][0];
-    }
-
-  }
-
- /*
-  * Returns the name of the used template
-  * by using one of the custom templating engines registered at tpl.engines.
-  *
-  * @return array
-  */
-  public function templateWithExternal($templateName) {
-    $res = array();
-
-    // template root folder
-    $templates = $this->kirby->roots()->templates();
-
-    // hook for external templating engines
-    $engines = c::get('tpl.engines');
-
-    $checkExtension = function($name, $extension) use($templates) {
-      if (file_exists($templates . DS . "$name.$extension")) {
-        return array($name, $extension);
-      }
-      return false;
-    };
-
-    foreach($engines as $extension => $engine) {
-      $res = $checkExtension($templateName, $extension);
-      if ($res) break;
-    }
-
-    // The specific template wasn't found, try again with 'default'
-    if (!$res && $templateName != 'default') {
-      foreach($engines as $extension => $engine) {
-        $res = array('default', $extension);
-        if ($res) break;
-      }
-    }
-
-    return $res;
+ 
+    return $withExtension ? join('.', $template) : $template[0];
   }
 
   /**
